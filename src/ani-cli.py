@@ -1,4 +1,4 @@
-# nekopv - The anime pre
+# nekopv - The CLI anime manager
 import os, sys
 import subprocess
 import json
@@ -7,7 +7,7 @@ import gganime
 
 import pref     # Preferences
 import fnparse  # Argument parsing
-
+import wharg
     # Note that with the amount of hard code and assets, the program will not run on Windows or will not function correctly
 
     ##Global settings
@@ -31,6 +31,8 @@ c_magenta   = pref.c_magenta
 c_cyan      = pref.c_cyan
 c_reset     = pref.c_reset
 #
+#
+greet_string = "Welcome to nekopv !"
 ngin = {"gganime": gganime}
 
     #Error reporter
@@ -41,22 +43,112 @@ def prerr(s: str, code:int):
     return
 
 def print_help():
-    print("\
-nekopv - CLI anime player\
-Usage: nekoplayer [OPTIONS] [anime]\
-\
-Options:\
--h,             : Print help\
---help\
--H,             : Request history\
---history\
--d,             : Download\
---download\
--q <quality>    : Quality\
---quality\
--Q, --query     : Query certain anime\
-    ")
+    print("""
+nekopv - CLI anime player
+Usage: nekoplayer [OPTIONS] [anime]
+
+Options:
+-h,             : Print help
+--help
+-H,             : Request history
+--history
+-d,             : Download
+--download
+-q <quality>    : Quality
+--quality
+-Q, --query     : Query certain anime
+    """)
     sys.exit(0)
+class nekopvRunning(wharg.argparser):
+    async def begin(self):
+        return
+
+    async def unknown(self, arg):
+        print(f"Argument '{arg}' unexpected!")
+        self.printHelp()
+        return
+    async def printHelp(self):
+        printHelp()
+        return
+    async def usage(s: str):
+        self.argStack.append(s)
+        return
+    async def repop(s: str, is_long:bool):
+        if is_long:
+            if s == "quality":
+                if cmdStack != "play":
+                    self.unknown(s)
+                    return
+                self.expect_arg = True
+                self.opStack.append(s)
+                return
+            if s == "verbal":
+                sysstt["verbal"] = True
+                sysstt["quiet"] = False
+                self.optStack.append(s)
+                return
+            if s == "quiet":
+                sysstt["quiet"] = True
+                sysstt["verbal"] = False
+                sysstt["debug"] = False
+                self.optStack.append(s)
+                return
+            if s == "debug":
+                sysstt["quiet"] = False
+                sysstt["debug"] = True
+                sysstt["verbal"] = True
+                return
+
+        else:
+            for c in s:
+                if c == "Q": # If a value-request option is read, other following option are set aside
+                    if cmdStack != "play":
+                        self.unknown(c)
+                        return
+                    self.expect_arg = True
+                    self.optStack.append(s)
+                    return
+                if c == "v":
+                    sysstt["verbal"] = True
+                    sysstt["quiet"] = False
+                    self.optStack.append(c)
+                    continue
+                if c == "q":
+                    sysstt["quiet"] = True
+                    sysstt["verbal"] = False
+                    self.optStack.append(c)
+                    continue
+                if c == "g":
+                    sysstt["debug"] = True
+                    sysstt["quiet"] = False
+                    sysstt["verbal"] = True
+                    return
+
+    async def exe(self):
+        if commandARG == "save":
+            #[FIXME]
+            return
+        if commandARG = "play":
+            #[FIXME]
+            return
+        if commandARG = "save":
+            #[FIXME]
+            return
+        if commandARG == "export":
+            #[FIXME]
+            return
+        if commandARG == "import":
+            #[FIXME]
+            return
+        if commandARG == "help":
+            self.printHelp()
+            return
+        if commandARG == "manual":
+            print_manual()
+            return
+        if commandARG == "plman":
+            #[FIXME]
+            return
 
 ##### Start-up ######
 def main():
@@ -134,50 +226,7 @@ def main():
             break
 
     #Main program
-    terminate = False
-    while not terminate:
-        if sysstt["anime_quest"] == "" or sysstt["anime_quest"] == None:
-            # Quest anime name
-            print(f"{c_blue}Search anime{c_reset}: ", end='')
-            sysstt["anime_quest"] = input()
-        main_ngin = ngin["gganime"]
-        search_results = main_ngin.search_anime(sysstt["anime_quest"])
-        if search_results == None:
-            print("No search results found, continue (Y/N): ")
-            inp = input().lower()
-            if inp == "y":
-                continue
-            else:
-                break
-        
-        #Anime selection section
-        count = 0
-        for animeid in search_results:
-            print(f"[{c_blue}{count}{c_reset}]{c_magenta}{animeid}{c_reset}") if count % 2 == 0 else print(f"[{c_blue}{count}{c_reset}]{c_yellow}{animeid}{c_reset}")
-            count += 1
-        print(f"{c_blue}Select anime [0-{len(search_results) - 1}]: ", end='')
-        epno = main_ngin.search_eps(sysstt["anime_quest"])
-        print(f"{c_blue}Choose episode {c_cyan}[1-{epno}]{c_reset}: {c_green}")
-        choices = input().split()
-        if len(choices) >= 2 or len(choices) == 0:
-            prerr("Maloformed input", 0)
-        if len(choices) == 1:
-            try:
-                ep_choice_start = ep_choice_end = int(choices[0])
-            except Exception as e:
-                raise e
-        else:
-            try:
-                ep_choice_start  = int(choices[0])
-                ep_choice_end   = int(choices[1])
-            except Exception as e:
-                raise e
-
-        for i in range(ep_choice_start, ep_choice_end + 1):
-            main_ngin.open_episode(sysstt["anime_quest"], i, sysstt["is_download"], sysstt["quality"])
-
-
-
+    wharg.argparser main_argparser(greetString = f"Welcome to {program_name} {program_version}", opa)
 
 if __name__ == "__main__":
     try:
